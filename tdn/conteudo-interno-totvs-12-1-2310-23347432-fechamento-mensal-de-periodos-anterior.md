@@ -1,0 +1,15 @@
+---
+title: "CONTEÚDO INTERNO TOTVS - 12.1.2310 - 23347432- FECHAMENTO MENSAL DE PERÍODOS ANTERIORES APRESENTANDO INCONSISTÊNCIA NO MV_PONMES E NÃO INCLUINDO O REGISTRO NA TABELA SPO DE PERÍODO FECHADO"
+url: "https://tdn.totvs.com/pages/viewpage.action?pageId=939234952"
+scraped_at: "2026-03-09T05:37:33.892Z"
+depth: 4
+anchors: 1
+child_links: 123
+---
+
+# CONTEÚDO INTERNO TOTVS - 12.1.2310 - 23347432- FECHAMENTO MENSAL DE PERÍODOS ANTERIORES APRESENTANDO INCONSISTÊNCIA NO MV_PONMES E NÃO INCLUINDO O REGISTRO NA TABELA SPO DE PERÍODO FECHADO
+
+**This page is under construction and soon you will have access to information.**
+
+
+<!-- anchors: workflow_page_not_permitted -->

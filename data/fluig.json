@@ -1,0 +1,98 @@
+{
+  "datasets": {
+    "colleague": {
+      "description": "Dataset interno de usuários do Fluig",
+      "type": "INTERNAL",
+      "columns": ["colleaguePK.colleagueId", "colleagueName", "mail", "login", "active", "groupId"],
+      "rows": [
+        { "colleaguePK.colleagueId": "rbecker", "colleagueName": "Rodrigo Becker", "mail": "rbecker@empresa.com.br", "login": "rbecker", "active": "true", "groupId": "TI" },
+        { "colleaguePK.colleagueId": "asilva", "colleagueName": "Ana Silva", "mail": "asilva@empresa.com.br", "login": "asilva", "active": "true", "groupId": "COMPRAS" },
+        { "colleaguePK.colleagueId": "jsouza", "colleagueName": "João Souza", "mail": "jsouza@empresa.com.br", "login": "jsouza", "active": "true", "groupId": "FINANCEIRO" },
+        { "colleaguePK.colleagueId": "mlima", "colleagueName": "Marina Lima", "mail": "mlima@empresa.com.br", "login": "mlima", "active": "false", "groupId": "COMPRAS" },
+        { "colleaguePK.colleagueId": "pcosta", "colleagueName": "Paulo Costa", "mail": "pcosta@empresa.com.br", "login": "pcosta", "active": "true", "groupId": "DIRETORIA" }
+      ]
+    },
+    "ds_centro_custo": {
+      "description": "Dataset customizado: centros de custo sincronizados do Protheus (CTT)",
+      "type": "CUSTOM",
+      "columns": ["CODIGO", "DESCRICAO", "RESPONSAVEL", "BLOQUEADO"],
+      "rows": [
+        { "CODIGO": "1001", "DESCRICAO": "Tecnologia da Informação", "RESPONSAVEL": "rbecker", "BLOQUEADO": "N" },
+        { "CODIGO": "2001", "DESCRICAO": "Suprimentos", "RESPONSAVEL": "asilva", "BLOQUEADO": "N" },
+        { "CODIGO": "3001", "DESCRICAO": "Controladoria", "RESPONSAVEL": "jsouza", "BLOQUEADO": "N" },
+        { "CODIGO": "9001", "DESCRICAO": "Projetos Encerrados", "RESPONSAVEL": "pcosta", "BLOQUEADO": "S" }
+      ]
+    },
+    "ds_fornecedores": {
+      "description": "Dataset customizado: fornecedores (SA2) via integração REST com Protheus",
+      "type": "CUSTOM",
+      "columns": ["CODIGO", "LOJA", "RAZAO_SOCIAL", "CNPJ", "UF"],
+      "rows": [
+        { "CODIGO": "F00001", "LOJA": "01", "RAZAO_SOCIAL": "Alfa Suprimentos Ltda", "CNPJ": "11.222.333/0001-44", "UF": "SP" },
+        { "CODIGO": "F00002", "LOJA": "01", "RAZAO_SOCIAL": "Beta Tecnologia S.A.", "CNPJ": "22.333.444/0001-55", "UF": "SC" },
+        { "CODIGO": "F00003", "LOJA": "02", "RAZAO_SOCIAL": "Gama Serviços ME", "CNPJ": "33.444.555/0001-66", "UF": "PR" }
+      ]
+    },
+    "ds_solicitacao_compra": {
+      "description": "Dataset de formulário (form dataset) do processo de Solicitação de Compra",
+      "type": "FORM",
+      "columns": ["documentid", "solicitante", "centroCusto", "fornecedor", "valorTotal", "status"],
+      "rows": [
+        { "documentid": "5021", "solicitante": "asilva", "centroCusto": "2001", "fornecedor": "F00001", "valorTotal": "12500.00", "status": "APROVACAO_GESTOR" },
+        { "documentid": "5022", "solicitante": "rbecker", "centroCusto": "1001", "fornecedor": "F00002", "valorTotal": "48900.00", "status": "APROVACAO_DIRETORIA" },
+        { "documentid": "5023", "solicitante": "jsouza", "centroCusto": "3001", "fornecedor": "F00003", "valorTotal": "3200.00", "status": "FINALIZADO" }
+      ]
+    }
+  },
+  "processes": {
+    "SolicitacaoCompra": {
+      "description": "Solicitação de compra com aprovação por alçada",
+      "version": 7,
+      "form": "frm_solicitacao_compra",
+      "activities": [
+        { "id": 4, "name": "Início - Abrir solicitação", "type": "start", "assignee": "pool:Group:COMPRAS" },
+        { "id": 5, "name": "Aprovação do Gestor", "type": "task", "assignee": "mecanismo:ResponsavelCentroCusto" },
+        { "id": 9, "name": "Gateway - Alçada", "type": "exclusiveGateway", "rule": "valorTotal > 20000 ? 10 : 12" },
+        { "id": 10, "name": "Aprovação da Diretoria", "type": "task", "assignee": "pool:Group:DIRETORIA" },
+        { "id": 12, "name": "Integração Protheus (Pedido SC7)", "type": "serviceTask", "event": "servicetask12" },
+        { "id": 14, "name": "Fim", "type": "end" }
+      ],
+      "events": ["beforeTaskSave", "afterProcessFinish", "validateForm", "servicetask12"]
+    },
+    "AdmissaoColaborador": {
+      "description": "Onboarding de colaborador integrado ao RM Labore",
+      "version": 3,
+      "form": "frm_admissao",
+      "activities": [
+        { "id": 1, "name": "Início - Dados do candidato", "type": "start", "assignee": "pool:Group:RH" },
+        { "id": 2, "name": "Validação documental", "type": "task", "assignee": "pool:Role:analista_rh" },
+        { "id": 3, "name": "Provisionar acessos", "type": "task", "assignee": "pool:Group:TI" },
+        { "id": 4, "name": "Fim", "type": "end" }
+      ],
+      "events": ["beforeStateEntry", "afterTaskComplete"]
+    }
+  },
+  "forms": {
+    "frm_solicitacao_compra": {
+      "process": "SolicitacaoCompra",
+      "fields": [
+        { "name": "solicitante", "type": "text", "required": true, "zoom": "colleague" },
+        { "name": "centroCusto", "type": "zoom", "required": true, "zoom": "ds_centro_custo" },
+        { "name": "fornecedor", "type": "zoom", "required": true, "zoom": "ds_fornecedores" },
+        { "name": "justificativa", "type": "textarea", "required": true },
+        { "name": "valorTotal", "type": "money", "required": true },
+        { "name": "tbItens", "type": "paiFilho", "children": ["itemDescricao", "itemQtd", "itemValorUnit"] }
+      ]
+    },
+    "frm_admissao": {
+      "process": "AdmissaoColaborador",
+      "fields": [
+        { "name": "nomeCandidato", "type": "text", "required": true },
+        { "name": "cpf", "type": "text", "required": true },
+        { "name": "cargo", "type": "text", "required": true },
+        { "name": "dataAdmissao", "type": "date", "required": true },
+        { "name": "gestor", "type": "zoom", "required": true, "zoom": "colleague" }
+      ]
+    }
+  }
+}
